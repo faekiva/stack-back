@@ -22,7 +22,9 @@ class Container:
         self._data = data
         self._state = data.get("State")
         self._config = data.get("Config")
-        self._mounts = [Mount(mnt, container=self) for mnt in data.get("Mounts")]
+        mount_data = data.get("Mounts") or []
+
+        self._mounts = [Mount(mnt, container=self) for mnt in mount_data]
 
         if not self._state:
             raise ValueError("Container meta missing State")
