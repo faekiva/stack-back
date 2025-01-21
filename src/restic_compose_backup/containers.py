@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import List
 
-from restic_compose_backup import enums, utils
+from restic_compose_backup import enums, utils, containers_db
 from restic_compose_backup.config import config
 
 logger = logging.getLogger(__name__)
@@ -14,45 +14,50 @@ VOLUME_TYPE_VOLUME = "volume"
 
 class Container:
     """Represents a docker container"""
-    container_type = None
+
+    # None in the base type, override by string in child types
+    container_type: None | str = None
 
     def __init__(self, data: dict):
         self._data = data
-        self._state = data.get('State')
-        self._config = data.get('Config')
-        self._mounts = [Mount(mnt, container=self) for mnt in data.get('Mounts')]
+        self._state = data.get("State")
+        self._config = data.get("Config")
+        self._mounts = [Mount(mnt, container=self) for mnt in data.get("Mounts")]
 
         if not self._state:
-            raise ValueError('Container meta missing State')
+            raise ValueError("Container meta missing State")
         if self._config is None:
-            raise ValueError('Container meta missing Config')
+            raise ValueError("Container meta missing Config")
 
-        self._labels = self._config.get('Labels')
+        self._labels = self._config.get("Labels")
         if self._labels is None:
-            raise ValueError('Container meta missing Config->Labels')
+            raise ValueError("Container meta missing Config->Labels")
 
         self._include = self._parse_pattern(self.get_label(enums.LABEL_VOLUMES_INCLUDE))
         self._exclude = self._parse_pattern(self.get_label(enums.LABEL_VOLUMES_EXCLUDE))
 
     @property
-    def instance(self) -> 'Container':
+    def instance(self) -> "Container":
         """Container: Get a service specific subclass instance"""
         # TODO: Do this smarter in the future (simple registry)
         if self.database_backup_enabled:
             from restic_compose_backup import containers_db
+
             if self.mariadb_backup_enabled:
                 return containers_db.MariadbContainer(self._data)
             if self.mysql_backup_enabled:
                 return containers_db.MysqlContainer(self._data)
             if self.postgresql_backup_enabled:
                 return containers_db.PostgresContainer(self._data)
+            else:
+                raise Exception("database type not found")
         else:
             return self
 
     @property
     def id(self) -> str:
         """str: The id of the container"""
-        return self._data.get('Id')
+        return self._data.get("Id")
 
     @property
     def hostname(self) -> str:
@@ -62,18 +67,19 @@ class Container:
     @property
     def image(self) -> str:
         """Image name"""
-        return self.get_config('Image')
+        return self.get_config("Image")
 
     @property
     def name(self) -> str:
         """Container name"""
-        return self._data['Name'].replace('/', '')
+        return self._data["Name"].replace("/", "")
 
     @property
     def service_name(self) -> str:
         """Name of the container/service"""
-        return self.get_label('com.docker.compose.service', default='') or \
-            self.get_label('com.docker.swarm.service.name', default='')
+        return self.get_label(
+            "com.docker.compose.service", default=""
+        ) or self.get_label("com.docker.swarm.service.name", default="")
 
     @property
     def backup_process_label(self) -> str:
@@ -83,7 +89,7 @@ class Container:
     @property
     def project_name(self) -> str:
         """str: Name of the compose setup"""
-        return self.get_label('com.docker.compose.project', default='')
+        return self.get_label("com.docker.compose.project", default="")
 
     @property
     def stack_name(self) -> str:
@@ -93,12 +99,12 @@ class Container:
     @property
     def is_oneoff(self) -> bool:
         """Was this container started with run command?"""
-        return self.get_label('com.docker.compose.oneoff', default='False') == 'True'
+        return self.get_label("com.docker.compose.oneoff", default="False") == "True"
 
     @property
     def environment(self) -> list:
         """All configured env vars for the container as a list"""
-        return self.get_config('Env')
+        return self.get_config("Env")
 
     def remove(self):
         self._data.remove()
@@ -106,15 +112,15 @@ class Container:
     def get_config_env(self, name) -> str:
         """Get a config environment variable by name"""
         # convert to dict and fetch env var by name
-        data = {i[0:i.find('=')]: i[i.find('=') + 1:] for i in self.environment}
+        data = {i[0 : i.find("=")]: i[i.find("=") + 1 :] for i in self.environment}
         return data.get(name)
 
     def set_config_env(self, name, value):
         """Set an environment variable"""
         env = self.environment
-        new_value = f'{name}={value}'
+        new_value = f"{name}={value}"
         for i, entry in enumerate(env):
-            if f'{name}=' in entry:
+            if f"{name}=" in entry:
                 env[i] = new_value
                 break
         else:
@@ -129,8 +135,8 @@ class Container:
         volumes = {}
         for mount in self._mounts:
             volumes[mount.source] = {
-                'bind': mount.destination,
-                'mode': 'rw',
+                "bind": mount.destination,
+                "mode": "rw",
             }
 
         return volumes
@@ -138,10 +144,12 @@ class Container:
     @property
     def backup_enabled(self) -> bool:
         """Is backup enabled for this container?"""
-        return any([
-            self.volume_backup_enabled,
-            self.database_backup_enabled,
-        ])
+        return any(
+            [
+                self.volume_backup_enabled,
+                self.database_backup_enabled,
+            ]
+        )
 
     @property
     def volume_backup_enabled(self) -> bool:
@@ -155,11 +163,13 @@ class Container:
     @property
     def database_backup_enabled(self) -> bool:
         """bool: Is database backup enabled in any shape or form?"""
-        return any([
-            self.mysql_backup_enabled,
-            self.mariadb_backup_enabled,
-            self.postgresql_backup_enabled,
-        ])
+        return any(
+            [
+                self.mysql_backup_enabled,
+                self.mariadb_backup_enabled,
+                self.postgresql_backup_enabled,
+            ]
+        )
 
     @property
     def mysql_backup_enabled(self) -> bool:
@@ -179,17 +189,20 @@ class Container:
     @property
     def stop_during_backup(self) -> bool:
         """bool: If the ``stack-back.volumes.stop-during-backup`` label is set"""
-        return utils.is_true(self.get_label(enums.LABEL_STOP_DURING_BACKUP)) and not self.database_backup_enabled
+        return (
+            utils.is_true(self.get_label(enums.LABEL_STOP_DURING_BACKUP))
+            and not self.database_backup_enabled
+        )
 
     @property
     def is_backup_process_container(self) -> bool:
         """Is this container the running backup process?"""
-        return self.get_label(self.backup_process_label) == 'True'
+        return self.get_label(self.backup_process_label) == "True"
 
     @property
     def is_running(self) -> bool:
         """bool: Is the container running?"""
-        return self._state.get('Running', False)
+        return self._state.get("Running", False)
 
     def get_config(self, name, default=None):
         """Get value from config dict"""
@@ -205,7 +218,11 @@ class Container:
 
         # If exclude_bind_mounts is true, only volume mounts are kept in the list of mounts
         exclude_bind_mounts = utils.is_true(config.exclude_bind_mounts)
-        mounts = list(filter(lambda m: not exclude_bind_mounts or m.type == "volume", self._mounts))
+        mounts = list(
+            filter(
+                lambda m: not exclude_bind_mounts or m.type == "volume", self._mounts
+            )
+        )
 
         if not self.volume_backup_enabled:
             return filtered
@@ -232,14 +249,14 @@ class Container:
 
         return filtered
 
-    def volumes_for_backup(self, source_prefix='/volumes', mode='ro'):
+    def volumes_for_backup(self, source_prefix="/volumes", mode="ro"):
         """Get volumes configured for backup"""
         mounts = self.filter_mounts()
         volumes = {}
         for mount in mounts:
             volumes[mount.source] = {
-                'bind': self.get_volume_backup_destination(mount, source_prefix),
-                'mode': mode,
+                "bind": self.get_volume_backup_destination(mount, source_prefix),
+                "mode": mode,
             }
 
         return volumes
@@ -250,7 +267,7 @@ class Container:
 
         if utils.is_true(config.include_project_name):
             project_name = self.project_name
-            if project_name != '':
+            if project_name != "":
                 destination /= project_name
 
         destination /= self.service_name
@@ -278,7 +295,7 @@ class Container:
         """list: create a dump command restic and use to send data through stdin"""
         raise NotImplementedError("Base container class don't implement this")
 
-    def _parse_pattern(self, value: str) -> List[str]:
+    def _parse_pattern(self, value: str) -> List[str] | None:
         """list: Safely parse include/exclude pattern from user"""
         if not value:
             return None
@@ -290,7 +307,7 @@ class Container:
         if len(value) == 0:
             return None
 
-        return value.split(',')
+        return value.split(",")
 
     def __eq__(self, other):
         """Compare container by id"""
@@ -311,6 +328,7 @@ class Container:
 
 class Mount:
     """Represents a volume mount (volume or bind)"""
+
     def __init__(self, data, container=None):
         self._data = data
         self._container = container
@@ -323,22 +341,22 @@ class Mount:
     @property
     def type(self) -> str:
         """bind/volume"""
-        return self._data.get('Type')
+        return self._data.get("Type")
 
     @property
     def name(self) -> str:
         """Name of the mount"""
-        return self._data.get('Name')
+        return self._data.get("Name")
 
     @property
     def source(self) -> str:
         """Source of the mount. Volume name or path"""
-        return self._data.get('Source')
+        return self._data.get("Source")
 
     @property
     def destination(self) -> str:
         """Destination path for the volume mount in the container"""
-        return self._data.get('Destination')
+        return self._data.get("Destination")
 
     def __repr__(self) -> str:
         return str(self)
@@ -361,28 +379,33 @@ class RunningContainers:
     def __init__(self):
         all_containers = utils.list_containers()
         self.containers = []
-        self.this_container = None
+        this_container = None
         self.backup_process_container = None
         self.stale_backup_process_containers = []
         self.stop_during_backup_containers = []
 
         # Find the container we are running in.
         # If we don't have this information we cannot continue
+        # doing the checks in a temporary value to make sure mypy doesn't evaluate self.this_container as potentially None.
         for container_data in all_containers:
-            if container_data.get('Id').startswith(os.environ['HOSTNAME']):
-                self.this_container = Container(container_data)
+            if container_data.get("Id").startswith(os.environ["HOSTNAME"]):
+                this_container = Container(container_data)
 
-        if not self.this_container:
+        if not this_container:
             raise ValueError("Cannot find metadata for backup container")
+
+        self.this_container = this_container
 
         # Gather all running containers in the current compose setup
         for container_data in all_containers:
             container = Container(container_data)
 
             # Gather stale backup process containers
-            if (self.this_container.image == container.image
-                    and not container.is_running
-                    and container.is_backup_process_container):
+            if (
+                self.this_container.image == container.image
+                and not container.is_running
+                and container.is_backup_process_container
+            ):
                 self.stale_backup_process_containers.append(container)
 
             # We only care about running containers after this point
@@ -437,16 +460,18 @@ class RunningContainers:
         """Obtain all containers with backup enabled"""
         return [container for container in self.containers if container.backup_enabled]
 
-    def generate_backup_mounts(self, dest_prefix='/volumes') -> dict:
+    def generate_backup_mounts(self, dest_prefix="/volumes") -> dict:
         """Generate mounts for backup for the entire compose setup"""
         mounts = {}
         for container in self.containers_for_backup():
             if container.volume_backup_enabled:
-                mounts.update(container.volumes_for_backup(source_prefix=dest_prefix, mode='ro'))
+                mounts.update(
+                    container.volumes_for_backup(source_prefix=dest_prefix, mode="ro")
+                )
 
         return mounts
 
-    def get_service(self, name) -> Container:
+    def get_service(self, name) -> Container | None:
         """Container: Get a service by name"""
         for container in self.containers:
             if container.service_name == name:
