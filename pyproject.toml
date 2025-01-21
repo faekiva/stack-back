@@ -1,0 +1,12 @@
+[project]
+name = "stack-back"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "docker>=7.1.0",
+    "requests>=2.32.3",
+    "types-docker>=7.1.0.20241229",
+    "types-requests>=2.32.0.20241016",
+]

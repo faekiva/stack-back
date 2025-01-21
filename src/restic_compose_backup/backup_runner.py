@@ -1,25 +1,32 @@
 import logging
 import os
-
 from restic_compose_backup import utils
+from docker.models.containers import Container as DockerContainer
 
 logger = logging.getLogger(__name__)
 
 
-def run(image: str = None, command: str = None, volumes: dict = None,
-        environment: dict = None, labels: dict = None, source_container_id: str = None):
+def run(
+    image: str = None,
+    command: str = None,
+    volumes: dict = None,
+    environment: dict = dict(),
+    labels: dict = None,
+    source_container_id: str = None,
+):
     logger.info("Starting backup container")
     client = utils.docker_client()
+    environment.update
 
-    container = client.containers.run(
+    container: DockerContainer = client.containers.run(
         image,
         command,
         labels=labels,
         # auto_remove=True,  # We remove the container further down
         detach=True,
-        environment=environment + ['BACKUP_PROCESS_CONTAINER=true'],
+        environment=environment | {"BACKUP_PROCESS_CONTAINER": "true"},
         volumes=volumes,
-        network_mode=f'container:{source_container_id}',  # Reuse original container's network stack.
+        network_mode=f"container:{source_container_id}",  # Reuse original container's network stack.
         working_dir=os.getcwd(),
         tty=True,
     )
@@ -40,7 +47,7 @@ def run(image: str = None, command: str = None, volumes: dict = None,
                         line += data.decode()
                     elif isinstance(data, str):
                         line += data
-                    if line.endswith('\n'):
+                    if line.endswith("\n"):
                         break
                 except StopIteration:
                     break
@@ -49,15 +56,15 @@ def run(image: str = None, command: str = None, volumes: dict = None,
             else:
                 break
 
-    with open('backup.log', 'w') as fd:
+    with open("backup.log", "w") as fd:
         for line in readlines(log_generator):
             fd.write(line)
-            fd.write('\n')
+            fd.write("\n")
             logger.info(line)
 
     container.wait()
     container.reload()
-    logger.debug("Container ExitCode %s", container.attrs['State']['ExitCode'])
+    logger.debug("Container ExitCode %s", container.attrs["State"]["ExitCode"])
     container.remove()
 
-    return container.attrs['State']['ExitCode']
+    return container.attrs["State"]["ExitCode"]
