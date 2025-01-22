@@ -135,6 +135,10 @@ source = { virtual = "." }
 dependencies = [
     { name = "docker" },
     { name = "requests" },
+]
+
+[package.dev-dependencies]
+dev = [
     { name = "types-docker" },
     { name = "types-requests" },
 ]
@@ -143,6 +147,10 @@ dependencies = [
 requires-dist = [
     { name = "docker", specifier = ">=7.1.0" },
     { name = "requests", specifier = ">=2.32.3" },
+]
+
+[package.metadata.requires-dev]
+dev = [
     { name = "types-docker", specifier = ">=7.1.0.20241229" },
     { name = "types-requests", specifier = ">=2.32.0.20241016" },
 ]
