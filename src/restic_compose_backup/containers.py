@@ -57,14 +57,14 @@ class Container:
             return self
 
     @property
-    def id(self) -> str:
+    def id(self) -> str | None:
         """str: The id of the container"""
         return self._data.get("Id")
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """12 character hostname based on id"""
-        return self.id[:12]
+        return self.id[:12] if self.id else None
 
     @property
     def image(self) -> str:
@@ -111,7 +111,7 @@ class Container:
     def remove(self):
         self._data.remove()
 
-    def get_config_env(self, name) -> str:
+    def get_config_env(self, name) -> str | None:
         """Get a config environment variable by name"""
         # convert to dict and fetch env var by name
         data = {i[0 : i.find("=")]: i[i.find("=") + 1 :] for i in self.environment}
@@ -204,7 +204,7 @@ class Container:
     @property
     def is_running(self) -> bool:
         """bool: Is the container running?"""
-        return self._state.get("Running", False)
+        return self._state.get("Running", False) if self._state else False
 
     def get_config(self, name, default=None):
         """Get value from config dict"""
