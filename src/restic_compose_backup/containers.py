@@ -3,9 +3,8 @@ import logging
 from pathlib import Path
 from typing import List
 
-from restic_compose_backup import enums, utils, containers_db
+from restic_compose_backup import enums, utils
 from restic_compose_backup.config import config
-from docker.models.containers import Container as DockerContainer
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +18,11 @@ class Container:
     # None in the base type, override by string in child types
     container_type: None | str = None
 
-    def __init__(self, data: DockerContainer):
+    def __init__(self, data: dict):
         self._data = data
-        self._state = data.attrs.get("State")
-        self._config = data.attrs.get("Config")
-        mount_data = data.attrs.get("Mounts") or []
+        self._state = data.get("State")
+        self._config = data.get("Config")
+        mount_data = data.get("Mounts") or []
 
         self._mounts = [Mount(mnt, container=self) for mnt in mount_data]
 
@@ -58,14 +57,14 @@ class Container:
             return self
 
     @property
-    def id(self) -> str | None:
+    def id(self) -> str:
         """str: The id of the container"""
-        return self._data.id
+        return self._data.get("Id")
 
     @property
     def hostname(self) -> str:
         """12 character hostname based on id"""
-        return self._data.short_id
+        return self.id[:12]
 
     @property
     def image(self) -> str:
@@ -73,9 +72,9 @@ class Container:
         return self.get_config("Image")
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Container name"""
-        return self._data.name.replace("/", "") if self._data.name else None
+        return self._data["Name"].replace("/", "")
 
     @property
     def service_name(self) -> str:
@@ -112,7 +111,7 @@ class Container:
     def remove(self):
         self._data.remove()
 
-    def get_config_env(self, name) -> str | None:
+    def get_config_env(self, name) -> str:
         """Get a config environment variable by name"""
         # convert to dict and fetch env var by name
         data = {i[0 : i.find("=")]: i[i.find("=") + 1 :] for i in self.environment}
@@ -205,7 +204,7 @@ class Container:
     @property
     def is_running(self) -> bool:
         """bool: Is the container running?"""
-        return self.is_running
+        return self._state.get("Running", False)
 
     def get_config(self, name, default=None):
         """Get value from config dict"""
