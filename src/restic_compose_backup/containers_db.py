@@ -32,10 +32,13 @@ class MariadbContainer(Container):
         creds = self.get_credentials()
 
         with utils.environment("MYSQL_PWD", creds["password"]):
-            return commands.ping_mariadb(
-                creds["host"],
-                creds["port"],
-                creds["username"],
+            return (
+                commands.ping_mariadb(
+                    creds["host"],
+                    creds["port"],
+                    creds["username"],
+                )
+                == 0
             )
 
     def dump_command(self) -> list:
@@ -99,13 +102,18 @@ class MysqlContainer(Container):
 
     def ping(self) -> bool:
         """Check the availability of the service"""
+        # Note, this isn't perfect, since ping will still return 0 if the username/password are incorrect
+        # https://dev.mysql.com/doc/refman/8.4/en/mysqladmin.html
         creds = self.get_credentials()
 
         with utils.environment("MYSQL_PWD", creds["password"]):
-            return commands.ping_mysql(
-                creds["host"],
-                creds["port"],
-                creds["username"],
+            return (
+                commands.ping_mysql(
+                    creds["host"],
+                    creds["port"],
+                    creds["username"],
+                )
+                == 0
             )
 
     def dump_command(self) -> list:
@@ -164,12 +172,17 @@ class PostgresContainer(Container):
 
     def ping(self) -> bool:
         """Check the availability of the service"""
+        # Note, this isn't perfect, since ping will still return 0 if the username/password are incorrect
+        # https://dev.mysql.com/doc/refman/8.4/en/mysqladmin.html
         creds = self.get_credentials()
-        return commands.ping_postgres(
-            creds["host"],
-            creds["port"],
-            creds["username"],
-            creds["password"],
+        return (
+            commands.ping_postgres(
+                creds["host"],
+                creds["port"],
+                creds["username"],
+                creds["password"],
+            )
+            == 0
         )
 
     def dump_command(self) -> list:
