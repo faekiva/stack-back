@@ -7,15 +7,19 @@ setup(
     version=__version__,
     author="Einar Forselv",
     author_email="eforselv@gmail.com",
-    packages=find_namespace_packages(include=[
-        'restic_compose_backup',
-        'restic_compose_backup.*',
-    ]),
+    packages=find_namespace_packages(
+        include=[
+            "restic_compose_backup",
+            "restic_compose_backup.*",
+        ]
+    ),
     install_requires=[
-        'docker~=7.1.0',
+        "docker~=7.1.0",
     ],
-    entry_points={'console_scripts': [
-        'restic-compose-backup = restic_compose_backup.cli:main',
-        'rcb = restic_compose_backup.cli:main',
-    ]},
+    entry_points={
+        "console_scripts": [
+            "restic-compose-backup = restic_compose_backup.cli:main",
+            "rcb = restic_compose_backup.cli:main",
+        ]
+    },
 )

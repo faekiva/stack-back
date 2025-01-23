@@ -1,7 +1,5 @@
-
-
 class BaseAlert:
-    name = None
+    name: str | None = None
 
     def create_from_env(self):
         return None

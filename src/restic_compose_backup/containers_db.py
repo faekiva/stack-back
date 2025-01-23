@@ -16,7 +16,7 @@ class MariadbContainer(Container):
         """dict: get credentials for the service"""
         password = self.get_config_env("MARIADB_ROOT_PASSWORD")
         if password is not None:
-            username = "root"
+            username: str | None = "root"
         else:
             username = self.get_config_env("MARIADB_USER")
             password = self.get_config_env("MARIADB_PASSWORD")
@@ -86,7 +86,7 @@ class MysqlContainer(Container):
         """dict: get credentials for the service"""
         password = self.get_config_env("MYSQL_ROOT_PASSWORD")
         if password is not None:
-            username = "root"
+            username: str | None = "root"
         else:
             username = self.get_config_env("MYSQL_USER")
             password = self.get_config_env("MYSQL_PASSWORD")
