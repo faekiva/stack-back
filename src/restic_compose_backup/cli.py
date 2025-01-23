@@ -69,7 +69,7 @@ def main():
             print(" - {} {} {}".format(node.id, addr, state))
 
 
-def status(config, containers):
+def status(config, containers: RunningContainers):
     """Outputs the backup config for the compose setup"""
     logger.info("Status for compose project '%s'", containers.project_name)
     logger.info("Repository: '%s'", config.repository)
@@ -196,7 +196,7 @@ def backup(config, containers: RunningContainers):
         )
 
 
-def start_backup_process(config, containers):
+def start_backup_process(config, containers: RunningContainers):
     """The actual backup process running inside the spawned container"""
     if not utils.is_true(os.environ.get("BACKUP_PROCESS_CONTAINER")):
         logger.error(
@@ -317,7 +317,7 @@ def restore(config, containers):
     """Restore a specific snapshot id"""
 
 
-def alert(config, containers):
+def alert(config, containers: RunningContainers):
     """Test alerts"""
     logger.info("Testing alerts")
     alerts.send(

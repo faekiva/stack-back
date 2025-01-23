@@ -5,6 +5,7 @@ from typing import List
 
 from restic_compose_backup import enums, utils, containers_db
 from restic_compose_backup.config import config
+from docker.models.containers import Container as DockerContainer
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +19,11 @@ class Container:
     # None in the base type, override by string in child types
     container_type: None | str = None
 
-    def __init__(self, data: dict):
+    def __init__(self, data: DockerContainer):
         self._data = data
-        self._state = data.get("State")
-        self._config = data.get("Config")
-        mount_data = data.get("Mounts") or []
+        self._state = data.attrs.get("State")
+        self._config = data.attrs.get("Config")
+        mount_data = data.attrs.get("Mounts") or []
 
         self._mounts = [Mount(mnt, container=self) for mnt in mount_data]
 
@@ -57,14 +58,14 @@ class Container:
             return self
 
     @property
-    def id(self) -> str:
+    def id(self) -> str | None:
         """str: The id of the container"""
-        return self._data.get("Id")
+        return self._data.id
 
     @property
     def hostname(self) -> str:
         """12 character hostname based on id"""
-        return self.id[:12]
+        return self._data.short_id
 
     @property
     def image(self) -> str:
@@ -72,9 +73,9 @@ class Container:
         return self.get_config("Image")
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Container name"""
-        return self._data["Name"].replace("/", "")
+        return self._data.name.replace("/", "") if self._data.name else None
 
     @property
     def service_name(self) -> str:
@@ -111,7 +112,7 @@ class Container:
     def remove(self):
         self._data.remove()
 
-    def get_config_env(self, name) -> str:
+    def get_config_env(self, name) -> str | None:
         """Get a config environment variable by name"""
         # convert to dict and fetch env var by name
         data = {i[0 : i.find("=")]: i[i.find("=") + 1 :] for i in self.environment}
@@ -204,7 +205,7 @@ class Container:
     @property
     def is_running(self) -> bool:
         """bool: Is the container running?"""
-        return self._state.get("Running", False)
+        return self.is_running
 
     def get_config(self, name, default=None):
         """Get value from config dict"""
