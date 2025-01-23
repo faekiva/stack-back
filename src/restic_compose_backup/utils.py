@@ -3,7 +3,6 @@ import logging
 from typing import List, TYPE_CHECKING
 from contextlib import contextmanager
 import docker
-from docker.models.containers import Container as DockerContainer
 
 if TYPE_CHECKING:
     from restic_compose_backup.containers import Container
@@ -28,7 +27,7 @@ def docker_client():
     return docker.from_env()
 
 
-def list_containers() -> List[DockerContainer]:
+def list_containers() -> List[dict]:
     """
     List all containers.
 
@@ -36,9 +35,9 @@ def list_containers() -> List[DockerContainer]:
         List of raw container json data from the api
     """
     client = docker_client()
-    all_containers: List[DockerContainer] = client.containers.list(all=True)
+    all_containers = client.containers.list(all=True)
     client.close()
-    return all_containers
+    return [c.attrs for c in all_containers]
 
 
 def get_swarm_nodes():
