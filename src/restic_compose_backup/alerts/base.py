@@ -8,5 +8,5 @@ class BaseAlert:
     def properly_configured(self) -> bool:
         return False
 
-    def send(self, subject: str = None, body: str = None, alert_type: str = None):
+    def send(self, subject: str = "", body: str = "", alert_type: str = None):
         pass
