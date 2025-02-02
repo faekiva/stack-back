@@ -12,6 +12,7 @@ from restic_compose_backup.config import Config
 from restic_compose_backup.containers import RunningContainers
 from restic_compose_backup import cron, utils
 from dataclasses import dataclass
+from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def main():
         dump_env()
 
     elif args.action == "restore":
-        restore(config, containers)
+        restore(config, passthroughArgs)
 
     # Random test stuff here
     elif args.action == "test":
@@ -313,8 +314,9 @@ def snapshots(config, containers):
         print(line)
 
 
-def restore(config, containers):
+def restore(config: Config, passThroughArgs: List[str]):
     """Restore a specific snapshot id"""
+    restic.restore(config.repository, passThroughArgs)
 
 
 def alert(config, containers: RunningContainers):
