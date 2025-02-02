@@ -1,13 +1,17 @@
 [project]
 name = "stack-back"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.1.2"
+description = "Easy, automated, and incremental backups for any Docker Compose stack using restic."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "docker>=7.1.0",
-    "requests>=2.32.3",
+    "docker~=7.1.0",
+    "requests~=2.32.3",
 ]
+
+[build-system]
+requires = ["setuptools >= 75.8.0"]
+build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
@@ -19,4 +23,8 @@ dev = [
 test = [
     "pytest==8.3.4",
     "tox>=4.24.1",
+]
+docs = [
+    "sphinx>=8.1.3",
+    "sphinx-rtd-theme>=3.0.2",
 ]

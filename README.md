@@ -44,7 +44,7 @@ services:
 
 [Documentation](https://stack-back.readthedocs.io)
 
-Please report issus on [github](https://github.com/lawndoc/stack-back/issues).
+Please report issues on [github](https://github.com/lawndoc/stack-back/issues).
 
 ## Configuration (environment variables)
 
@@ -110,7 +110,9 @@ Contributions are welcome regardless of experience level.
 
 ## Local dev setup
 
-The git repository contains a simple local setup for development
+The git repository contains a simple local setup for development, using `uv`.
+[You can install uv following instructions here](https://docs.astral.sh/uv/getting-started/installation/)
+
 
 ```bash
 # Create an overlay network to link the compose project and stack

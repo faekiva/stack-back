@@ -1,8 +1,7 @@
-FROM restic/restic:0.17.3
+FROM ghcr.io/astral-sh/uv:0.5.26-alpine
 
 RUN apk update && apk add \
-    python3 \
-    py3-pip \
+    'restic=0.17.3' \
     dcron \
     mariadb-client \
     mariadb-connector-c-dev
@@ -11,8 +10,7 @@ RUN apk add postgresql-client --repository=http://dl-cdn.alpinelinux.org/alpine/
 
 ADD . /restic-compose-backup
 WORKDIR /restic-compose-backup
-RUN pip install -U pip setuptools wheel --break-system-packages && \
-    pip install -e . --break-system-packages
+RUN uv sync --frozen
 ENV XDG_CACHE_HOME=/cache
 
 ENTRYPOINT []
