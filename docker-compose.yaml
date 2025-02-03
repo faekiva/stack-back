@@ -14,7 +14,15 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./restic_data:/restic_data
       - ./restic_cache:/cache
-      - ./src:/stack-back
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /stack-back
+        # Rebuild the image if dependencies change by checking uv.lock
+        - action: rebuild
+          path: ./uv.lock
+
   web:
     image: nginx
     labels:
