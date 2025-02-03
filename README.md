@@ -148,7 +148,6 @@ mode with `docker swarm leave --force` when needed in development (single node s
 ## Building Docs
 
 ```bash
-pip install -r docs/requirements.txt
 python src/setup.py build_sphinx
 ```
 
