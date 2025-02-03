@@ -137,14 +137,12 @@ mode with `docker swarm leave --force` when needed in development (single node s
 ## Running Tests
 
 ```bash
-pip install -r src/tests/requirements.txt
 tox
 ```
 
 ## Building Docs
 
 ```bash
-pip install -r docs/requirements.txt
 python src/setup.py build_sphinx
 ```
 

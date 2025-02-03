@@ -6,7 +6,8 @@ backup.log
 *.env
 
 # IDEs
-.vscode
+.vscode/*
+!.vscode/extensions.json
 .idea
 
 # python
