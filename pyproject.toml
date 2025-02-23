@@ -1,5 +1,5 @@
 [project]
-name = "restic-compose-backup"
+name = "stack-back"
 description = "Easy, automated, and incremental backups for any Docker Compose stack using restic."
 authors = [{name = "Einar Forselv", email = "eforselv@gmail.com"}]
 readme = "README.md"
