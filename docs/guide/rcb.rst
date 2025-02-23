@@ -183,6 +183,11 @@ Example output::
     2019-12-09 05:09:52,892 - INFO: Forget outdated snapshots
     2019-12-09 05:09:53,776 - INFO: Prune stale data freeing storage space
 
+restore
+~~~~~~~
+runs ``restic restore``
+
+
 start-backup-process
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -197,3 +202,5 @@ The backup process is doing the following:
 * Backs up each configured database
 * Runs ``cleanup`` purging snapshots based on the configured policy
 * Checks the health of the repository
+
+
