@@ -30,6 +30,7 @@ class BaseTestCase(unittest.TestCase):
             }
         ]
 
+
 class ResticBackupTests(BaseTestCase):
     def test_list_containers(self):
         """Test a basic container list"""
@@ -130,7 +131,7 @@ class ResticBackupTests(BaseTestCase):
             list_containers_func, fixtures.containers(containers=containers)
         ):
             cnt = RunningContainers()
-            self.assertTrue(len(cnt.containers_for_backup()) == 2)
+            self.assertTrue(len(cnt.containers_for_write()) == 2)
             self.assertEqual(
                 cnt.generate_backup_mounts(),
                 {"test": {"bind": "/volumes/web/test", "mode": "ro"}},
@@ -213,7 +214,7 @@ class ResticBackupTests(BaseTestCase):
             list_containers_func, fixtures.containers(containers=containers)
         ):
             cnt = RunningContainers()
-            self.assertFalse(cnt.backup_process_running)
+            self.assertFalse(cnt.write_process_running)
 
         containers += [
             {
@@ -227,7 +228,7 @@ class ResticBackupTests(BaseTestCase):
             list_containers_func, fixtures.containers(containers=containers)
         ):
             cnt = RunningContainers()
-            self.assertTrue(cnt.backup_process_running)
+            self.assertTrue(cnt.write_process_running)
 
 
 class IncludeAllVolumesTests(BaseTestCase):
@@ -272,7 +273,7 @@ class IncludeAllVolumesTests(BaseTestCase):
         self.assertEqual(len(mounts), 2)
         self.assertEqual(mounts[0].source, "/srv/files/media")
         self.assertEqual(mounts[1].source, "/srv/files/stuff")
-        
+
     def test_redundant_label(self):
         """Test that a container has a redundant label and should be backed up"""
 
@@ -310,8 +311,6 @@ class IncludeAllVolumesTests(BaseTestCase):
         self.assertEqual(len(mounts), 2)
         self.assertEqual(mounts[0].source, "/srv/files/media")
         self.assertEqual(mounts[1].source, "/srv/files/stuff")
-
-
 
     def test_explicit_exclude(self):
         """Test that a container can be excluded from the backup"""
