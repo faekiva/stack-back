@@ -1,5 +1,5 @@
 # Project specific
-backup.log
+write.log
 
 # Environment files (potential secrets)
 *.env

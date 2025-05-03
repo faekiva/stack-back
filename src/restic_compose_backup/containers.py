@@ -382,7 +382,7 @@ class RunningContainers:
         all_containers = utils.list_containers()
         self.containers = []
         this_container = None
-        self.backup_process_container = None
+        self.write_process_container = None
         self.stale_backup_process_containers = []
         self.stop_during_backup_containers = []
 
@@ -424,7 +424,7 @@ class RunningContainers:
 
             # Detect running backup process container
             if container.is_backup_process_container:
-                self.backup_process_container = container
+                self.write_process_container = container
 
             # --- Determine what containers should be evaluated
 
@@ -438,7 +438,7 @@ class RunningContainers:
                 continue
 
             # Do not include the backup process container
-            if container == self.backup_process_container:
+            if container == self.write_process_container:
                 continue
 
             self.containers.append(container)
@@ -454,18 +454,18 @@ class RunningContainers:
         return self.this_container.backup_process_label
 
     @property
-    def backup_process_running(self) -> bool:
+    def write_process_running(self) -> bool:
         """Is the backup process container running?"""
-        return self.backup_process_container is not None
+        return self.write_process_container is not None
 
-    def containers_for_backup(self):
+    def containers_for_write(self):
         """Obtain all containers with backup enabled"""
         return [container for container in self.containers if container.backup_enabled]
 
     def generate_backup_mounts(self, dest_prefix="/volumes") -> dict:
         """Generate mounts for backup for the entire compose setup"""
         mounts = {}
-        for container in self.containers_for_backup():
+        for container in self.containers_for_write():
             if container.volume_backup_enabled:
                 mounts.update(
                     container.volumes_for_backup(source_prefix=dest_prefix, mode="ro")
