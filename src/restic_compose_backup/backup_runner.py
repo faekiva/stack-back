@@ -18,7 +18,6 @@ def run(
 ) -> int:
     logger.info("Starting backup container")
     client = utils.docker_client()
-    environment.update
 
     container: DockerContainer = client.containers.run(
         image,
